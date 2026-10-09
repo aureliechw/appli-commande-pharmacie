@@ -1,0 +1,44 @@
+name: Mise à jour ANSM et publication
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Heures UTC : 6 h et 13 h à Paris en été (5 h et 12 h en hiver).
+    - cron: '0 4 * * *'
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Télécharger l'export ANSM
+        env:
+          URL_ANSM: https://ansm.sante.fr/disponibilites-des-produits-de-sante/medicaments/export
+          URL_SITE: ${{ steps.pages.outputs.base_url }}
+        run: bash outils/telecharger-ansm.sh
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - id: deploiement
+        uses: actions/deploy-pages@v4

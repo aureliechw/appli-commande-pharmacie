@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Commandes Pharmacie</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="entete">
+  <div class="entete-titre">
+    <h1>Commandes pharmacie</h1>
+    <span class="entete-sous" id="infoFichier">Aucun fichier chargé</span>
+  </div>
+  <form id="formChargement" class="chargement">
+    <label class="zone-fichier" id="zoneFichier">
+      <input type="file" id="fichier" accept=".xlsx,.xls" required>
+      <span id="libelleFichier">Choisir ou déposer le fichier du jour (prev_reap_phar…xlsx)</span>
+    </label>
+    <details class="options-ansm">
+      <summary>Export ANSM manuel</summary>
+      <div class="panneau-ansm">
+        <p>Par défaut, l'application utilise l'export ANSM récupéré automatiquement chaque jour. Pour utiliser un export plus récent, chargez ici le fichier téléchargé depuis le <a href="https://ansm.sante.fr/disponibilites-des-produits-de-sante/medicaments" target="_blank" rel="noopener">site de l'ANSM</a>.</p>
+        <input type="file" id="fichierAnsm" accept=".xls,.xlsx">
+      </div>
+    </details>
+    <button type="submit" class="btn btn-primaire" id="btnAnalyser">Analyser</button>
+  </form>
+</header>
+
+<main id="contenu">
+  <section id="accueil" class="accueil">
+    <h2>Chargez le fichier du jour pour calculer la commande</h2>
+    <p>L'application applique la méthode de réapprovisionnement (déclencheurs FS5/FS6/FS9, compléments, quantités arrondies au multiple de commande) puis croise la liste avec les alertes de disponibilité de l'ANSM.</p>
+    <p class="discret">Le fichier est traité uniquement dans ce navigateur : il n'est envoyé à aucun serveur.</p>
+  </section>
+
+  <div id="chargementEnCours" class="attente" hidden>
+    <div class="spinner"></div>
+    <span>Calcul des commandes et croisement avec l'export ANSM…</span>
+  </div>
+
+  <div id="erreur" class="bandeau bandeau-erreur" hidden></div>
+
+  <section id="resultats" hidden>
+    <div id="avertissementAnsm" class="bandeau bandeau-alerte" hidden></div>
+
+    <section class="bilan">
+      <h2>Bilan des commandes</h2>
+      <div class="kpis" id="kpis"></div>
+      <div class="bilan-grille">
+        <div class="carte">
+          <div class="carte-titre">
+            <h3>Alertes ANSM trouvées</h3>
+            <span class="discret" id="infoAnsm"></span>
+          </div>
+          <div class="table-ansm-conteneur">
+            <table class="table-ansm" id="tableAnsm">
+              <thead><tr><th>Produit</th><th>Code</th><th>Statut</th><th>Confiance</th><th>Fournisseur</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="carte">
+          <h3>Légende</h3>
+          <ul class="legende">
+            <li><span class="badge badge-declencheur">Déclencheur</span> commande obligatoire (seuil atteint)</li>
+            <li><span class="badge badge-complement">Complément</span> anticipation chez un fournisseur déjà déclenché</li>
+            <li><span class="badge badge-ajout">Ajout manuel</span> médicament non préconisé, ajouté par l'utilisateur</li>
+            <li><span class="echantillon ech-rupture"></span> alerte ANSM <b>Rupture de stock</b></li>
+            <li><span class="echantillon ech-tension"></span> alerte ANSM <b>Tension d'approvisionnement</b></li>
+            <li><span class="echantillon ech-arret"></span> alerte ANSM <b>Arrêt de commercialisation</b></li>
+            <li><span class="echantillon ech-remise"></span> alerte ANSM <b>Remise à disposition</b></li>
+            <li><span class="tag tag-m11">M-11</span> quantité calculée à partir de la conso M-11 (supérieure à la moyenne M-1/M-2/M-3)</li>
+            <li><span class="tag tag-epuise">Épuisé avant livraison</span> jours de stock inférieurs au délai de livraison</li>
+            <li><span class="qte-exemple modifiee">12</span> quantité modifiée &nbsp; <span class="qte-exemple non-multiple">7</span> non multiple de la qté min</li>
+          </ul>
+          <p class="discret" id="infoExclus"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="filtres" aria-label="Filtres">
+      <input type="search" id="recherche" placeholder="Rechercher un produit ou un code…">
+      <select id="filtreType">
+        <option value="">Déclencheurs et compléments</option>
+        <option value="DECLENCHEUR">Déclencheurs seulement</option>
+        <option value="COMPLEMENT">Compléments seulement</option>
+        <option value="AJOUT">Ajouts manuels seulement</option>
+      </select>
+      <label><input type="checkbox" id="filtreAnsm"> Alerte ANSM</label>
+      <label><input type="checkbox" id="filtreM11"> Calcul M-11</label>
+      <label><input type="checkbox" id="filtreEpuise"> Épuisé avant livraison</label>
+      <select id="allerA"><option value="">Aller au fournisseur…</option></select>
+      <button type="button" class="btn btn-ajout" id="btnAjout">+ Ajouter un médicament</button>
+      <span class="filtres-actions">
+        <button type="button" class="btn btn-lien" id="toutReplier">Tout replier</button>
+        <button type="button" class="btn btn-lien" id="toutDeplier">Tout déplier</button>
+      </span>
+    </section>
+
+    <div id="fournisseurs"></div>
+  </section>
+</main>
+
+<footer class="barre-export" id="barreExport" hidden>
+  <div class="barre-totaux" id="barreTotaux"></div>
+  <button type="button" class="btn btn-primaire" id="btnValider">Valider les quantités et exporter</button>
+</footer>
+
+<dialog id="dialogueExport">
+  <form method="dialog" class="dialogue">
+    <h2>Valider la commande</h2>
+    <p>Vérifiez les fournisseurs à exporter. Un fichier Excel sera généré par laboratoire, ainsi qu'un ZIP qui les regroupe ; ils seront enregistrés dans le dossier de téléchargements du navigateur.</p>
+    <div class="dialogue-liste" id="listeExport"></div>
+    <div class="dialogue-total" id="totalExport"></div>
+    <div id="resultatExport"></div>
+    <div class="dialogue-actions">
+      <button value="annuler" class="btn">Fermer</button>
+      <button type="button" class="btn btn-primaire" id="btnConfirmerExport">Confirmer et générer les fichiers</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dialogueAjout" class="dialogue-large">
+  <form method="dialog" class="dialogue">
+    <h2>Ajouter un médicament non préconisé</h2>
+    <p>Recherchez parmi les produits du fichier que l'application n'a pas retenus. La ligne ajoutée reprend tous les indicateurs, et la colonne « Motif » indique pourquoi le produit n'avait pas été retenu.</p>
+    <input type="search" id="rechercheAjout" placeholder="Nom ou code produit (2 caractères minimum)…" autocomplete="off">
+    <div class="resultats-ajout" id="resultatsAjout"></div>
+    <div class="dialogue-actions">
+      <button value="annuler" class="btn">Fermer</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="vendor/exceljs.min.js"></script>
+<script src="vendor/jszip.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/calcul.js"></script>
+<script src="js/ansm.js"></script>
+<script src="js/export.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

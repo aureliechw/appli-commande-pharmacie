@@ -1,0 +1,11 @@
+# Données de la pharmacie : ne jamais publier (le dépôt est public).
+data/
+exports/
+*.xlsx
+
+# Export ANSM : généré par GitHub Actions au moment de la publication.
+public/data/
+
+# Ancienne version avec serveur Node.js, conservée en local seulement.
+ancienne-version-serveur/
+node_modules/
