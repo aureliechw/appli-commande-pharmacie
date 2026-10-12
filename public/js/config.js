@@ -1,7 +1,8 @@
 // Paramètres de l'application (anciennement config.json).
 const CONFIG = {
   tauxTVA: 0.021,
-  codesBlocageExclus: ['C', 'E*', 'AUT'],
+  // Produits ignorés (code BLOCAGE exact).
+  codesBlocageExclus: ['AUT', 'EB', 'C'],
   // Export ANSM publié avec le site par la tâche GitHub Actions (.github/workflows/deploy.yml).
   fichierANSM: 'data/ansm_export.xls',
   metaANSM: 'data/ansm_meta.json',

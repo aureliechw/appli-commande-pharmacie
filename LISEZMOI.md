@@ -24,9 +24,11 @@ GitHub désactive les tâches planifiées d'un dépôt public sans activité dep
 il suffit alors de les réactiver dans l'onglet **Actions**.
 
 ## Règles appliquées
-- Méthode du prompt (étapes 1 à 5) : conso prévisionnelle = max(moyenne M-1/M-2/M-3, M-11), seuil = 10 + délai (DELREA),
+- Stock effectif = STOCK + EN_CDE − RESERVE (quantité demandée par les services), ramené à 0 s'il est négatif.
+- Méthode du prompt (étapes 1 à 5) : conso prévisionnelle = max(moyenne des mois M-1/M-2/M-3 non nuls, M-11), seuil = 10 + délai (DELREA),
   fréquence selon le nombre de références du fournisseur, quantité arrondie au multiple supérieur de QTE_MIN_FOUR.
-- Produits exclus : codes BLOCAGE `C`, `AUT` et commençant par `E` (modifiable dans `public/js/config.js`, clé `codesBlocageExclus`).
+- Produits ignorés : codes BLOCAGE `AUT`, `EB` et `C` (ni proposés, ni ajoutables, ni comptés dans le nombre de références
+  du fournisseur ; modifiable dans `public/js/config.js`, clé `codesBlocageExclus`).
 - QTE_MIN_FOUR à 0 ou vide : 1 est utilisé (repère « Qté min ? » sur la ligne).
 - Croisement ANSM par algorithme local (marque ou DCI, forme, labo, dosage) → CONFIRME / PROBABLE / DOUTE, avec une note
   expliquant chaque critère. Il reste indicatif : vérifier les DOUTE et PROBABLE via le lien vers la fiche ANSM.
