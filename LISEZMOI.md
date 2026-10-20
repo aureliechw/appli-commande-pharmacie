@@ -15,8 +15,8 @@ il n'est envoyé à aucun serveur.
 
 ## Export ANSM automatique
 Le site de l'ANSM refuse les requêtes venant d'une page web : l'export ne peut pas être téléchargé par le navigateur.
-La tâche GitHub Actions `.github/workflows/deploy.yml` le télécharge à chaque publication et deux fois par jour
-(6 h et 13 h, heure de Paris en été), puis le publie avec le site (`data/ansm_export.xls`).
+La tâche GitHub Actions `.github/workflows/deploy.yml` le télécharge à chaque publication et une fois par jour
+(21 h, heure de Paris), puis le publie avec le site (`data/ansm_export.xls`).
 En cas d'échec, l'export déjà en ligne est conservé. Lancement manuel : onglet **Actions** du dépôt →
 « Mise à jour ANSM et publication » → **Run workflow**.
 
@@ -25,7 +25,7 @@ il suffit alors de les réactiver dans l'onglet **Actions**.
 
 ## Règles appliquées
 - Stock effectif = STOCK + EN_CDE − RESERVE (quantité demandée par les services), ramené à 0 s'il est négatif.
-- Méthode du prompt (étapes 1 à 5) : conso prévisionnelle = max(moyenne des mois M-1/M-2/M-3 non nuls, M-11), seuil = 10 + délai (DELREA),
+- Méthode du prompt (étapes 1 à 5) : conso prévisionnelle = max(moyenne des mois M-1/M-2/M-3 (zéros compris), M-11), seuil = 10 + délai (DELREA),
   fréquence selon le nombre de références du fournisseur, quantité arrondie au multiple supérieur de QTE_MIN_FOUR.
 - Produits ignorés : codes BLOCAGE `AUT`, `EB` et `C` (ni proposés, ni ajoutables, ni comptés dans le nombre de références
   du fournisseur ; modifiable dans `public/js/config.js`, clé `codesBlocageExclus`).

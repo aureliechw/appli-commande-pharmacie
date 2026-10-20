@@ -4,9 +4,10 @@ on:
   push:
     branches: [main]
   schedule:
-    # Heures UTC : 6 h et 13 h à Paris en été (5 h et 12 h en hiver).
-    - cron: '0 4 * * *'
-    - cron: '0 11 * * *'
+    # Heures UTC : 19 h = 21 h à Paris en été, 20 h = 21 h en hiver.
+    # Le job « horaire » ne garde que le déclenchement qui tombe à 21 h à Paris.
+    - cron: '0 19 * * *'
+    - cron: '0 20 * * *'
   workflow_dispatch:
 
 permissions:
@@ -19,7 +20,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  horaire:
+    runs-on: ubuntu-latest
+    outputs:
+      publier: ${{ steps.verif.outputs.publier }}
+    steps:
+      - id: verif
+        env:
+          CRON: ${{ github.event.schedule }}
+        run: |
+          publier=true
+          decalage=$(TZ=Europe/Paris date +%z)
+          if { [ "$CRON" = "0 19 * * *" ] && [ "$decalage" != "+0200" ]; } ||
+             { [ "$CRON" = "0 20 * * *" ] && [ "$decalage" != "+0100" ]; }; then
+            publier=false
+          fi
+          echo "publier=$publier" >> "$GITHUB_OUTPUT"
+
   publier:
+    needs: horaire
+    if: needs.horaire.outputs.publier == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

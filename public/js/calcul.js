@@ -81,9 +81,8 @@ function calculerCommandes(lignesBrutes, config) {
     const m2 = Math.max(0, nombre(r['CONSO_M-2']));
     const m3 = Math.max(0, nombre(r['CONSO_M-3']));
     const m11 = Math.max(0, nombre(r['CONSO_M-11']));
-    // Moyenne des seuls mois M-1/M-2/M-3 non nuls (0 si les trois sont nuls).
-    const moisUtiles = [m1, m2, m3].filter(v => v > 0);
-    const moyenne = moisUtiles.length ? moisUtiles.reduce((a, b) => a + b, 0) / moisUtiles.length : 0;
+    // Moyenne des mois M-1/M-2/M-3, mois à zéro compris.
+    const moyenne = (m1 + m2 + m3) / 3;
     const consoPrev = Math.max(moyenne, m11);
     const consoJour = consoPrev / 30;
     const stock = nombre(r.STOCK);
@@ -104,7 +103,7 @@ function calculerCommandes(lignesBrutes, config) {
       qteMin: qteMinBrute > 0 ? qteMinBrute : 1,
       qteMinAbsente: !(qteMinBrute > 0),
       stock, enCommande, reserve, stockEffectif,
-      m1, m2, m3, m11, moyenne, nbMoisMoyenne: moisUtiles.length, consoPrev, consoJour,
+      m1, m2, m3, m11, moyenne, consoPrev, consoJour,
       viaM11: m11 > moyenne,
       joursStock: consoJour > 0 ? stockEffectif / consoJour : Infinity,
       delai,

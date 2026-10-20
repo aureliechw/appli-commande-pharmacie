@@ -101,7 +101,7 @@ function versClient(p) {
     code: p.code, produit: p.produit, typeFS: p.typeFS, blocage: p.blocage,
     stockMin: p.stockMin, qteMin: p.qteMin, qteMinAbsente: p.qteMinAbsente,
     stock: p.stock, enCommande: p.enCommande, reserve: p.reserve, stockEffectif: p.stockEffectif,
-    m1: p.m1, m2: p.m2, m3: p.m3, m11: p.m11, moyenne: p.moyenne, nbMoisMoyenne: p.nbMoisMoyenne,
+    m1: p.m1, m2: p.m2, m3: p.m3, m11: p.m11, moyenne: p.moyenne,
     consoPrev: p.consoPrev, consoJour: p.consoJour, joursStock: nombreJSON(p.joursStock),
     delai: p.delai, seuil: p.seuil, freq: p.freq,
     qteCalculee: p.qteCalculee, type: p.type, motif: p.motif,
@@ -259,7 +259,7 @@ function ligneHTML(l) {
     <td class="num">${num(l.m2)}</td>
     <td class="num">${num(l.m3)}</td>
     <td class="num${l.viaM11 ? ' cell-m11' : ''}">${num(l.m11)}</td>
-    <td class="num${l.viaM11 ? ' cell-m11' : ''}" title="Moyenne des mois M-1/M-2/M-3 non nuls (${l.nbMoisMoyenne ?? 3} mois) : ${nf1.format(l.moyenne)}">${num(l.consoPrev, nf1)}</td>
+    <td class="num${l.viaM11 ? ' cell-m11' : ''}" title="Moyenne des mois M-1/M-2/M-3 :${nf1.format(l.moyenne)}">${num(l.consoPrev, nf1)}</td>
     <td class="num">${num(l.consoJour, nf2)}</td>
     <td class="num${l.ruptureAvantLivraison ? ' jours-critique' : ''}">${num(l.joursStock, nf1)}</td>
     <td class="num">${num(l.delai)}</td>
