@@ -37,8 +37,9 @@ function estBloque(code, codesExclus) {
 }
 
 function frequencePourNbRefs(n) {
-  if (n > 50) return 10;
-  if (n >= 20) return 15;
+  if (n > 60) return 7;
+  if (n > 30) return 10;
+  if (n > 15) return 15;
   return 30;
 }
 
