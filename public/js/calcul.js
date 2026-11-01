@@ -3,7 +3,7 @@
 const Calcul = (() => {
 
 const COLONNES_REQUISES = ['CODPRO', 'CODREA', 'NOMPRO', 'QTE_MIN_FOUR', 'STOCK', 'EN_CDE',
-  'CONSO_M-1', 'CONSO_M-2', 'CONSO_M-3', 'CONSO_M-11', 'CODE_FR', 'NOM_FR', 'DELREA', 'SEUIL_CSS', 'PUMP', 'RESERVE'];
+  'CONSO_M-1', 'CONSO_M-2', 'CONSO_M-3', 'CONSO_M-11', 'CODE_FR', 'NOM_FR', 'DELREA', 'SEUIL_CSO', 'PUMP', 'RESERVE'];
 
 function nombre(v) {
   if (v === null || v === undefined) return 0;
@@ -100,7 +100,7 @@ function calculerCommandes(lignesBrutes, config) {
       typeFS: typeBrut,
       typeCalcul: typeBrut === 'FS5' ? 'FS6' : typeBrut,
       blocage: texte(r.BLOCAGE).toUpperCase(),
-      stockMin: nombre(r.SEUIL_CSS),
+      stockMin: nombre(r.SEUIL_CSO),
       qteMin: qteMinBrute > 0 ? qteMinBrute : 1,
       qteMinAbsente: !(qteMinBrute > 0),
       stock, enCommande, reserve, stockEffectif,
