@@ -2,7 +2,7 @@
 const CONFIG = {
   tauxTVA: 0.021,
   // Produits ignorés (code BLOCAGE exact).
-  codesBlocageExclus: ['AUT', 'EB', 'C'],
+  codesBlocageExclus: ['EB', 'C'],
   // Export ANSM publié avec le site par la tâche GitHub Actions (.github/workflows/deploy.yml).
   fichierANSM: 'data/ansm_export.xls',
   metaANSM: 'data/ansm_meta.json',

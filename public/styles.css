@@ -155,7 +155,8 @@ main { padding: 16px 20px; max-width: 100%; }
 .fournisseur-nom h3 { font-size: 16px; }
 .fournisseur-nom .chevron { display: inline-block; transition: transform .15s; color: var(--texte-2); }
 .fournisseur.replie .chevron { transform: rotate(-90deg); }
-.fournisseur.replie .table-conteneur, .fournisseur.replie .fournisseur-pied, .fournisseur.replie .entetes-colonnes { display: none; }
+.fournisseur.replie .table-conteneur, .fournisseur.replie .fournisseur-pied, .fournisseur.replie .entetes-colonnes,
+.fournisseur.replie .defil-h { display: none; }
 /* Bandeau du laboratoire + titres des colonnes : collés sous les filtres pendant le défilement. */
 .fournisseur-collant {
   position: sticky; top: calc(var(--haut-entete, 0px) + var(--haut-filtres, 0px)); z-index: 10;
@@ -170,9 +171,19 @@ main { padding: 16px 20px; max-width: 100%; }
 .cout-libelle { font-size: 11px; color: var(--texte-2); text-transform: uppercase; letter-spacing: .03em; }
 .cout-valeur { font-weight: 600; }
 .cout-ttc .cout-valeur { font-size: 16px; color: var(--primaire-fonce); }
+/* Montant TTC < 150 € ou > 100 000 € */
+.cout-ttc.hors-limites .cout-valeur, .hors-limites { color: var(--rupture-fort); font-weight: 700; }
 .fournisseur-pied { padding: 6px 14px; font-size: 12.5px; color: var(--texte-2); }
 
-.table-conteneur { overflow-x: auto; }
+/* La barre de défilement native du tableau est masquée : elle est remplacée par .defil-h,
+   collée en bas de l'écran (au-dessus de la barre d'export) tant que le laboratoire est visible. */
+.table-conteneur { overflow-x: auto; scrollbar-width: none; }
+.table-conteneur::-webkit-scrollbar { display: none; }
+.defil-h {
+  position: sticky; bottom: var(--haut-barre-export, 0px); z-index: 5;
+  overflow-x: auto; overflow-y: hidden; background: var(--surface-2); border-top: 1px solid var(--bord);
+}
+.defil-h > div { height: 1px; }
 table.commande { border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 12.5px; font-variant-numeric: tabular-nums; }
 table.commande th {
   background: var(--surface-2);
@@ -191,6 +202,11 @@ table.commande th.col-code, table.commande th.col-produit, table.commande th.col
 table.commande td.col-code, table.commande td.col-produit, table.commande td.col-action { background: inherit; }
 table.commande td.texte-long, table.commande td.motif { white-space: normal; }
 table.commande td:nth-child(21) { white-space: normal; }
+/* Séparateurs de groupes de colonnes : avant Stock, Conso M-1, Délai liv. et Statut ANSM. */
+table.commande th:nth-child(7), table.commande td:nth-child(7),
+table.commande th:nth-child(10), table.commande td:nth-child(10),
+table.commande th:nth-child(17), table.commande td:nth-child(17),
+table.commande th:nth-child(21), table.commande td:nth-child(21) { border-left: 2px solid #9fb6c6; }
 table.commande td.motif .badge { margin-right: 4px; }
 th.col-qte, td.col-qte { background: #eef6fb !important; }
 

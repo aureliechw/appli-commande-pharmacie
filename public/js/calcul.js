@@ -115,7 +115,7 @@ function calculerCommandes(lignesBrutes, config) {
     };
   });
 
-  // Produits bloqués (AUT, EB, C) : ignorés, ni proposés, ni ajoutables, ni comptés pour la fréquence.
+  // Produits bloqués (codes de config.codesBlocageExclus) : ignorés, ni proposés, ni ajoutables, ni comptés pour la fréquence.
   const exclus = tous.filter(p => estBloque(p.blocage, config.codesBlocageExclus));
   const produits = tous.filter(p => !estBloque(p.blocage, config.codesBlocageExclus));
 

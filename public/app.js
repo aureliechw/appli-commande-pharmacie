@@ -196,7 +196,7 @@ function afficher() {
     ? `${a.ansm.nbAlertes} alertes actives — export ANSM du ${new Date(a.ansm.date).toLocaleString('fr-FR')} (${a.ansm.source})`
     : 'Export ANSM indisponible';
   $('#infoExclus').textContent = a.stats.nbExclusBlocage
-    ? `${a.stats.nbExclusBlocage} produit(s) ignoré(s) pour code blocage (AUT, EB, C) : ` +
+    ? `${a.stats.nbExclusBlocage} produit(s) ignoré(s) pour code blocage (${CONFIG.codesBlocageExclus.join(', ')}) : ` +
       a.stats.detailExclus.map(p => `${p.produit} (${p.blocage})`).join(', ')
     : '';
 
@@ -207,6 +207,13 @@ function afficher() {
 }
 
 function majListeFournisseurs() {
+  // Filtre fréquence : une option par fréquence présente (la sélection en cours est conservée).
+  const liste = fournisseurs();
+  const choixFreq = $('#filtreFreq').value;
+  const freqs = [...new Set(liste.map(f => f.freq))].sort((a, b) => b - a);
+  $('#filtreFreq').innerHTML = '<option value="">Toutes les fréquences</option>' +
+    freqs.map(fq => `<option value="${fq}">Commande tous les ${fq} j (${liste.filter(f => f.freq === fq).length} fourn.)</option>`).join('');
+  $('#filtreFreq').value = freqs.includes(Number(choixFreq)) ? choixFreq : '';
   $('#allerA').innerHTML = '<option value="">Aller au fournisseur…</option>' +
     fournisseurs().map(f => `<option value="${esc(f.codeFR)}">${esc(f.nomFR)}</option>`).join('');
 }
@@ -302,8 +309,9 @@ function enteteHTML() {
 function filtre() {
   const q = $('#recherche').value.trim().toLowerCase();
   const type = $('#filtreType').value;
+  const fq = Number($('#filtreFreq').value) || 0;
   const fa = $('#filtreAnsm').checked, fm = $('#filtreM11').checked, fe = $('#filtreEpuise').checked;
-  return l => !l.supprimee &&
+  return l => !l.supprimee && (!fq || l.freq === fq) &&
     (!q || l.produit.toLowerCase().includes(q) || l.code.toLowerCase().includes(q)) &&
     (!type || l.type === type) && (!fa || l.ansm) && (!fm || l.viaM11) && (!fe || l.ruptureAvantLivraison);
 }
@@ -339,6 +347,7 @@ function rendreFournisseurs() {
       <div class="table-conteneur">
         <table class="commande" style="width:${LARGEUR_TABLE}px">${COLGROUP}<tbody>${visibles.map(ligneHTML).join('')}</tbody></table>
       </div>
+      <div class="defil-h" aria-hidden="true"><div style="width:${LARGEUR_TABLE}px"></div></div>
       ${supprimees ? `<div class="fournisseur-pied">${supprimees} ligne(s) supprimée(s) —
         <button type="button" class="btn-lien" data-restaurer="${esc(f.codeFR)}">restaurer</button></div>` : ''}
     </section>`;
@@ -347,15 +356,21 @@ function rendreFournisseurs() {
 }
 
 function estSansFiltre() {
-  return !$('#recherche').value.trim() && !$('#filtreType').value &&
+  return !$('#recherche').value.trim() && !$('#filtreType').value && !$('#filtreFreq').value &&
     !$('#filtreAnsm').checked && !$('#filtreM11').checked && !$('#filtreEpuise').checked;
 }
 
+// Montant de commande TTC hors limites : affiché en rouge.
+const MONTANT_MIN_TTC = 150, MONTANT_MAX_TTC = 100000;
+const horsLimites = ttc => ttc > 0 && (ttc < MONTANT_MIN_TTC || ttc > MONTANT_MAX_TTC);
+const TITRE_HORS_LIMITES = `Montant TTC inférieur à ${MONTANT_MIN_TTC} € ou supérieur à ${nf0.format(MONTANT_MAX_TTC)} €`;
+
 function coutsHTML(lignes) {
   const c = couts(lignes);
+  const hl = horsLimites(c.ttc);
   return `<div class="cout"><div class="cout-libelle">Total HT</div><div class="cout-valeur">${euro.format(c.ht)}</div></div>
     <div class="cout"><div class="cout-libelle">TVA ${nf1.format(etat.tauxTVA * 100)} %</div><div class="cout-valeur">${euro.format(c.tva)}</div></div>
-    <div class="cout cout-ttc"><div class="cout-libelle">Total TTC</div><div class="cout-valeur">${euro.format(c.ttc)}</div></div>`;
+    <div class="cout cout-ttc${hl ? ' hors-limites' : ''}"${hl ? ` title="${TITRE_HORS_LIMITES}"` : ''}><div class="cout-libelle">Total TTC</div><div class="cout-valeur">${euro.format(c.ttc)}</div></div>`;
 }
 
 function majBilan() {
@@ -462,16 +477,17 @@ $('#fournisseurs').addEventListener('keydown', e => {
   if (suivant) { suivant.focus(); suivant.select(); }
 });
 
-// Défilement horizontal synchronisé entre l'en-tête collant et le corps du tableau.
+// Défilement horizontal synchronisé : en-tête collant, corps du tableau et barre de défilement collante.
+const ZONES_DEFIL = ['entetes-colonnes', 'table-conteneur', 'defil-h'];
 document.addEventListener('scroll', e => {
   const cible = e.target;
-  if (!(cible instanceof Element)) return;
+  if (!(cible instanceof Element) || !ZONES_DEFIL.some(c => cible.classList.contains(c))) return;
   const section = cible.closest('.fournisseur');
   if (!section) return;
-  let autre = null;
-  if (cible.classList.contains('table-conteneur')) autre = section.querySelector('.entetes-colonnes');
-  else if (cible.classList.contains('entetes-colonnes')) autre = section.querySelector('.table-conteneur');
-  if (autre && autre.scrollLeft !== cible.scrollLeft) autre.scrollLeft = cible.scrollLeft;
+  ZONES_DEFIL.forEach(c => {
+    const autre = section.querySelector('.' + c);
+    if (autre && autre !== cible && autre.scrollLeft !== cible.scrollLeft) autre.scrollLeft = cible.scrollLeft;
+  });
 }, true);
 
 // Hauteurs des bandeaux collants (en-tête de page + filtres) pour positionner celui du laboratoire.
@@ -480,11 +496,13 @@ function majHauteursCollantes() {
   const hEntete = getComputedStyle(entete).position === 'sticky' ? entete.offsetHeight : 0;
   document.documentElement.style.setProperty('--haut-entete', hEntete + 'px');
   document.documentElement.style.setProperty('--haut-filtres', document.querySelector('.filtres').offsetHeight + 'px');
+  document.documentElement.style.setProperty('--haut-barre-export', $('#barreExport').offsetHeight + 'px');
 }
 window.addEventListener('resize', majHauteursCollantes);
-new ResizeObserver(majHauteursCollantes).observe(document.querySelector('.entete'));
+const observateurHauteurs = new ResizeObserver(majHauteursCollantes);
+['.entete', '.filtres', '#barreExport'].forEach(s => observateurHauteurs.observe(document.querySelector(s)));
 
-['#recherche', '#filtreType', '#filtreAnsm', '#filtreM11', '#filtreEpuise'].forEach(s =>
+['#recherche', '#filtreType', '#filtreFreq', '#filtreAnsm', '#filtreM11', '#filtreEpuise'].forEach(s =>
   $(s).addEventListener(s === '#recherche' ? 'input' : 'change', rendreFournisseurs));
 
 function allerA(selecteur) {
@@ -579,7 +597,7 @@ function rechercherAjout() {
 }
 
 function reinitialiserFiltres() {
-  $('#recherche').value = ''; $('#filtreType').value = '';
+  $('#recherche').value = ''; $('#filtreType').value = ''; $('#filtreFreq').value = '';
   ['#filtreAnsm', '#filtreM11', '#filtreEpuise'].forEach(s => { $(s).checked = false; });
 }
 
@@ -623,7 +641,7 @@ $('#btnValider').addEventListener('click', () => {
       <input type="checkbox" checked class="choix-fournisseur" value="${esc(f.codeFR)}">
       <span>${esc(f.nomFR)}</span>
       <span class="discret">${f.lignes.length} ligne(s)</span>
-      <span>${euro.format(couts(f.lignes).ttc)} TTC</span></label>`).join('');
+      <span${horsLimites(couts(f.lignes).ttc) ? ` class="hors-limites" title="${TITRE_HORS_LIMITES}"` : ''}>${euro.format(couts(f.lignes).ttc)} TTC</span></label>`).join('');
   $('#resultatExport').innerHTML = nonMultiples
     ? `<div class="bandeau bandeau-alerte">${nonMultiples} quantité(s) ne sont pas des multiples de la qté min de commande.</div>` : '';
   $('#btnConfirmerExport').disabled = false;
