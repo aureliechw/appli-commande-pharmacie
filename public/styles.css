@@ -245,6 +245,7 @@ dialog::backdrop { background: rgba(16, 24, 40, .45); }
 .dialogue-liste { max-height: 45vh; overflow: auto; border: 1px solid var(--bord); border-radius: 6px; }
 .dialogue-liste label { display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px; align-items: center; padding: 7px 10px; border-bottom: 1px solid var(--bord); cursor: pointer; font-variant-numeric: tabular-nums; }
 .dialogue-liste label:last-child { border-bottom: none; }
+.dialogue-liste label.tout-cocher { position: sticky; top: 0; z-index: 1; background: var(--remise); font-weight: 600; }
 .dialogue-total { text-align: right; font-weight: 600; }
 .dialogue-actions { display: flex; justify-content: flex-end; gap: 10px; }
 dialog.dialogue-large { width: min(1100px, calc(100vw - 32px)); }

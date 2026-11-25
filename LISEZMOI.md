@@ -10,8 +10,9 @@ il n'est envoyé à aucun serveur.
    on peut alors charger l'export manuellement via « Export ANSM manuel ».
 4. Ajuster les quantités (cellule « Qté à commander ») et supprimer les lignes inutiles (✕). Les coûts HT / TVA 2,1 % / TTC
    se recalculent immédiatement. Les modifications sont conservées dans le navigateur si la page est rechargée.
-5. **Valider les quantités et exporter** : un fichier Excel par laboratoire + un ZIP qui les regroupe,
-   enregistrés dans le dossier de téléchargements.
+5. **Valider les quantités et exporter** : cocher les fournisseurs à intégrer (une case permet de tout cocher / décocher),
+   puis un seul fichier `prev_reap_phar_JJMM.xlsx` est enregistré dans le dossier de téléchargements
+   (feuille `temp`, colonnes CODPRO, NOMPRO, UF = 996, QTE_MIN_FOUR = quantité commandée, CODE_FR).
 
 ## Export ANSM automatique
 Le site de l'ANSM refuse les requêtes venant d'une page web : l'export ne peut pas être téléchargé par le navigateur.

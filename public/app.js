@@ -616,8 +616,11 @@ $('#btnValider').addEventListener('click', () => {
     .filter(f => f.lignes.length);
   if (!liste.length) { alert('Aucune ligne à exporter.'); return; }
   const nonMultiples = actives().filter(l => l.qteMin > 1 && l.qte % l.qteMin !== 0).length;
-  $('#listeExport').innerHTML = liste.map(f => `<label>
-      <input type="checkbox" checked value="${esc(f.codeFR)}">
+  $('#listeExport').innerHTML = `<label class="tout-cocher">
+      <input type="checkbox" checked id="toutCocherExport">
+      <span>Tous les fournisseurs</span><span></span><span></span></label>` +
+    liste.map(f => `<label>
+      <input type="checkbox" checked class="choix-fournisseur" value="${esc(f.codeFR)}">
       <span>${esc(f.nomFR)}</span>
       <span class="discret">${f.lignes.length} ligne(s)</span>
       <span>${euro.format(couts(f.lignes).ttc)} TTC</span></label>`).join('');
@@ -629,7 +632,7 @@ $('#btnValider').addEventListener('click', () => {
 });
 
 function selectionExport() {
-  const codes = new Set([...$('#listeExport').querySelectorAll('input:checked')].map(i => i.value));
+  const codes = new Set([...$('#listeExport').querySelectorAll('.choix-fournisseur:checked')].map(i => i.value));
   return fournisseurs()
     .filter(f => codes.has(f.codeFR))
     .map(f => ({ codeFR: f.codeFR, nomFR: f.nomFR, lignes: f.lignes.filter(l => !l.supprimee && l.qte > 0) }));
@@ -638,33 +641,43 @@ function selectionExport() {
 function majTotalExport() {
   const sel = selectionExport();
   const c = couts(sel.flatMap(f => f.lignes));
-  $('#totalExport').textContent = `${sel.length} fichier(s) — HT ${euro.format(c.ht)} · TVA ${euro.format(c.tva)} · TTC ${euro.format(c.ttc)}`;
+  $('#totalExport').textContent = `${sel.length} fournisseur(s), ${sel.reduce((s, f) => s + f.lignes.length, 0)} ligne(s) — HT ${euro.format(c.ht)} · TVA ${euro.format(c.tva)} · TTC ${euro.format(c.ttc)}`;
+  // Case « Tous les fournisseurs » : cochée si tout est coché, intermédiaire si sélection partielle.
+  const cases = [...$('#listeExport').querySelectorAll('.choix-fournisseur')];
+  const nbCoches = cases.filter(i => i.checked).length;
+  const tout = $('#toutCocherExport');
+  tout.checked = nbCoches === cases.length;
+  tout.indeterminate = nbCoches > 0 && nbCoches < cases.length;
+  $('#btnConfirmerExport').disabled = nbCoches === 0;
 }
-$('#listeExport').addEventListener('change', majTotalExport);
+$('#listeExport').addEventListener('change', e => {
+  if (e.target.id === 'toutCocherExport') {
+    $('#listeExport').querySelectorAll('.choix-fournisseur').forEach(i => { i.checked = e.target.checked; });
+  }
+  majTotalExport();
+});
 
 $('#btnConfirmerExport').addEventListener('click', async () => {
   const sel = selectionExport();
   if (!sel.length) return;
   const btn = $('#btnConfirmerExport');
   btn.disabled = true;
-  $('#resultatExport').innerHTML = '<div class="attente" style="margin:8px 0"><div class="spinner"></div>Génération des fichiers…</div>';
+  $('#resultatExport').innerHTML = '<div class="attente" style="margin:8px 0"><div class="spinner"></div>Génération du fichier…</div>';
   try {
-    const resultat = await Export.genererExports(sel.map(f => ({
-      codeFR: f.codeFR, nomFR: f.nomFR,
-      lignes: f.lignes.map(l => ({ code: l.code, produit: l.produit, qte: l.qte, qteMin: l.qteMin, pump: l.pump }))
-    })), etat.tauxTVA);
-    if (!resultat.fichiers.length) throw new Error('Aucune ligne à exporter.');
-    // Les liens de l'export précédent sont libérés avant d'en créer de nouveaux.
+    const resultat = await Export.genererExport(sel.map(f => ({
+      codeFR: f.codeFR,
+      lignes: f.lignes.map(l => ({ code: l.code, produit: l.produit, qte: l.qte }))
+    })));
+    if (!resultat) throw new Error('Aucune ligne à exporter.');
+    // Le lien de l'export précédent est libéré avant d'en créer un nouveau.
     liensExport.forEach(URL.revokeObjectURL);
-    liensExport = [];
-    const lien = blob => { const url = URL.createObjectURL(blob); liensExport.push(url); return url; };
-    const urlArchive = lien(resultat.archive.blob);
+    const url = URL.createObjectURL(resultat.blob);
+    liensExport = [url];
     $('#resultatExport').innerHTML = `<div class="liens-export">
-      <strong>${resultat.fichiers.length} fichier(s) généré(s). Le téléchargement du ZIP démarre ; fichiers individuels :</strong>
-      ${resultat.fichiers.map(f => `<a href="${lien(f.blob)}" download="${esc(f.nom)}">${esc(f.nom)}</a>`).join('')}
-      <a href="${urlArchive}" download="${esc(resultat.archive.nom)}"><b>Tout télécharger (${esc(resultat.archive.nom)})</b></a></div>`;
+      <strong>Fichier généré : ${resultat.lignes} ligne(s), ${resultat.fournisseurs} fournisseur(s). Le téléchargement démarre.</strong>
+      <a href="${url}" download="${esc(resultat.nom)}">${esc(resultat.nom)}</a></div>`;
     const a = document.createElement('a');
-    a.href = urlArchive; a.download = resultat.archive.nom;
+    a.href = url; a.download = resultat.nom;
     document.body.appendChild(a); a.click(); a.remove();
   } catch (err) {
     $('#resultatExport').innerHTML = `<div class="bandeau bandeau-erreur">Export impossible : ${esc(err.message)}</div>`;

@@ -111,13 +111,13 @@
 <dialog id="dialogueExport">
   <form method="dialog" class="dialogue">
     <h2>Valider la commande</h2>
-    <p>Vérifiez les fournisseurs à exporter. Un fichier Excel sera généré par laboratoire, ainsi qu'un ZIP qui les regroupe ; ils seront enregistrés dans le dossier de téléchargements du navigateur.</p>
+    <p>Vérifiez les fournisseurs à exporter. Un seul fichier Excel (prev_reap_phar_JJMM.xlsx, UF 996) regroupera les fournisseurs cochés ; il sera enregistré dans le dossier de téléchargements du navigateur.</p>
     <div class="dialogue-liste" id="listeExport"></div>
     <div class="dialogue-total" id="totalExport"></div>
     <div id="resultatExport"></div>
     <div class="dialogue-actions">
       <button value="annuler" class="btn">Fermer</button>
-      <button type="button" class="btn btn-primaire" id="btnConfirmerExport">Confirmer et générer les fichiers</button>
+      <button type="button" class="btn btn-primaire" id="btnConfirmerExport">Confirmer et générer le fichier</button>
     </div>
   </form>
 </dialog>
@@ -136,7 +136,6 @@
 
 <script src="vendor/xlsx.full.min.js"></script>
 <script src="vendor/exceljs.min.js"></script>
-<script src="vendor/jszip.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/calcul.js"></script>
 <script src="js/ansm.js"></script>
